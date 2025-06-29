@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="x_fuegofs_fuegofileservice">
+    <x_fuegofs_fuegofileservice action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <application>FuegoFS</application>
+        <content>&lt;!DOCTYPE html&gt;&#13;
+&lt;html lang="en"&gt;&#13;
+&lt;head&gt;&#13;
+    &lt;meta charset="UTF-8"&gt;&#13;
+    &lt;title&gt;Hello World Test&lt;/title&gt;&#13;
+&lt;/head&gt;&#13;
+&lt;body&gt;&#13;
+    &lt;h1&gt;Hello, world!&lt;/h1&gt;&#13;
+&lt;/body&gt;&#13;
+&lt;/html&gt;</content>
+        <mime_type>text/html</mime_type>
+        <number>FUEGO0001001</number>
+        <path>/views/hello.html</path>
+        <sys_class_name>x_fuegofs_fuegofileservice</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-06-29 20:36:56</sys_created_on>
+        <sys_id>e8e1e67383962210df1fc670ceaad34d</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_name/>
+        <sys_package display_value="FuegoFS" source="x_fuegofs">be94dfc7db022300273871efbf9619b6</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="FuegoFS">be94dfc7db022300273871efbf9619b6</sys_scope>
+        <sys_update_name>x_fuegofs_fuegofileservice_e8e1e67383962210df1fc670ceaad34d</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-06-29 20:49:05</sys_updated_on>
+    </x_fuegofs_fuegofileservice>
+</record_update>
