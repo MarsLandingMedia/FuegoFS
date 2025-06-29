@@ -3,9 +3,12 @@
         <access>package_private</access>
         <active>true</active>
         <api_name>x_165838_cryptofs.CryptoMadness</api_name>
+        <caller_access/>
         <client_callable>true</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>CryptoMadness</name>
+        <sandbox_callable>true</sandbox_callable>
         <script><![CDATA[var CryptoMadness = Class.create();
 CryptoMadness.prototype = {
 	initialize: function() {
