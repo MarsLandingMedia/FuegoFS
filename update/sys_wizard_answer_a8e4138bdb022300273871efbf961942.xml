@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sys_wizard_answer">
     <sys_wizard_answer action="INSERT_OR_UPDATE">
         <active>true</active>
-        <answer>CryptoFileService</answer>
+        <answer>FuegoFileService</answer>
         <button_label/>
         <dependent_value/>
         <element/>
-        <name>CryptoFileService</name>
+        <name>FuegoFileService</name>
         <next_question/>
         <order>100</order>
         <payload_name/>
@@ -17,15 +17,15 @@
         <sys_created_on>2018-12-03 03:53:36</sys_created_on>
         <sys_id>a8e4138bdb022300273871efbf961942</sys_id>
         <sys_mod_count>0</sys_mod_count>
-        <sys_name>CryptoFileService</sys_name>
-        <sys_package display_value="CryptoFS" source="x_165838_cryptofs">be94dfc7db022300273871efbf9619b6</sys_package>
+        <sys_name>FuegoFileService</sys_name>
+        <sys_package display_value="FuegoFS" source="x_fuegofs">be94dfc7db022300273871efbf9619b6</sys_package>
         <sys_policy/>
-        <sys_scope display_value="CryptoFS">be94dfc7db022300273871efbf9619b6</sys_scope>
+        <sys_scope display_value="FuegoFS">be94dfc7db022300273871efbf9619b6</sys_scope>
         <sys_update_name>sys_wizard_answer_a8e4138bdb022300273871efbf961942</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
         <sys_updated_on>2018-12-03 03:53:36</sys_updated_on>
         <table/>
-        <target_url>x_165838_cryptofs_cryptofileservice.do</target_url>
+        <target_url>x_fuegofs_fuegofileservice.do</target_url>
         <type>1</type>
     </sys_wizard_answer>
 </record_update>

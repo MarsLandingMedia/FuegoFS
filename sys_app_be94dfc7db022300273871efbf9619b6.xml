@@ -8,14 +8,14 @@
         <license_model>none</license_model>
         <logo/>
         <menu/>
-        <name>CryptoFS</name>
+        <name>FuegoFS</name>
         <private>false</private>
         <restrict_table_access>false</restrict_table_access>
         <runtime_access_tracking>permissive</runtime_access_tracking>
-        <scope>x_165838_cryptofs</scope>
+        <scope>x_fuegofs</scope>
         <scoped_administration>false</scoped_administration>
         <short_description/>
-        <source>x_165838_cryptofs</source>
+        <source>x_fuegofs</source>
         <store_correlation_id/>
         <store_url/>
         <sys_class_name>sys_app</sys_class_name>
