@@ -12,12 +12,11 @@
 	//setup REST response
 	var writer = response.getStreamWriter();
 	var path = request.queryString;	
-
+    
 	//process
 	var KeyHole = new FuegoFrenzy();
-	var nt = KeyHole.FileServe(path);
-	var Talent = JSON.parse(nt);
-
+	var Talent = KeyHole.FileServe(path);
+	
 	//file response
 	response.setContentType(Talent.mimetype);
 	response.setStatus(200);
@@ -37,14 +36,14 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2018-12-03 04:35:43</sys_created_on>
         <sys_id>2cbc1b4fdb022300273871efbf961914</sys_id>
-        <sys_mod_count>15</sys_mod_count>
+        <sys_mod_count>28</sys_mod_count>
         <sys_name>FileServices</sys_name>
         <sys_package display_value="FuegoFS" source="x_fuegofs">be94dfc7db022300273871efbf9619b6</sys_package>
         <sys_policy/>
         <sys_scope display_value="FuegoFS">be94dfc7db022300273871efbf9619b6</sys_scope>
         <sys_update_name>sys_ws_operation_2cbc1b4fdb022300273871efbf961914</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2025-06-29 20:44:56</sys_updated_on>
+        <sys_updated_on>2025-06-29 22:21:58</sys_updated_on>
         <web_service_definition display_value="FuegoFS">333a138fdb022300273871efbf961950</web_service_definition>
         <web_service_version/>
     </sys_ws_operation>
