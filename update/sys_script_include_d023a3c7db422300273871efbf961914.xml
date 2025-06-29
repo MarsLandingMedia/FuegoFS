@@ -3,9 +3,12 @@
         <access>package_private</access>
         <active>true</active>
         <api_name>x_fuegofs.FuegoFrenzy</api_name>
+        <caller_access/>
         <client_callable>true</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>FuegoFrenzy</name>
+        <sandbox_callable>true</sandbox_callable>
         <script><![CDATA[var FuegoFrenzy = Class.create();
 FuegoFrenzy.prototype = {
 	initialize: function() {

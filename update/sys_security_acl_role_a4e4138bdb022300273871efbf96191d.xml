@@ -14,6 +14,5 @@
         <sys_updated_by>admin</sys_updated_by>
         <sys_updated_on>2018-12-03 03:53:36</sys_updated_on>
         <sys_user_role display_value="x_fuegofs.fuegofileservice_user" name="x_fuegofs.fuegofileservice_user">a8e45b4bdb022300273871efbf96195e</sys_user_role>
-        <transaction_id/>
     </sys_security_acl_role>
 </record_update>

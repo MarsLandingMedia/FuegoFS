@@ -12,13 +12,13 @@
         <sys_class_name>ua_table_licensing_config</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2018-12-03 03:53:37</sys_created_on>
-        <sys_id>f8e4138bdb022300273871efbf961949</sys_id>
+        <sys_id>ec11a23383962210df1fc670ceaad302</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_name>x_fuegofs_fuegofileservice</sys_name>
         <sys_package display_value="FuegoFS" source="x_fuegofs">be94dfc7db022300273871efbf9619b6</sys_package>
         <sys_policy/>
         <sys_scope display_value="FuegoFS">be94dfc7db022300273871efbf9619b6</sys_scope>
-        <sys_update_name>ua_table_licensing_config_f8e4138bdb022300273871efbf961949</sys_update_name>
+        <sys_update_name>ua_table_licensing_config_ec11a23383962210df1fc670ceaad302</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
         <sys_updated_on>2018-12-03 03:53:37</sys_updated_on>
     </ua_table_licensing_config>
