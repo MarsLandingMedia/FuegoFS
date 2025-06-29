@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?><database>
-    <element attributes="update_synch=true" extends="sys_metadata" label="CryptoFileService" max_length="40" name="x_165838_cryptofs_cryptofileservice" type="collection">
+    <element attributes="update_synch=true" extends="sys_metadata" label="FuegoFileService" max_length="40" name="x_fuegofs_fuegofileservice" type="collection">
         <element default="true" label="Active" max_length="10" name="active" type="boolean"/>
-        <element choice="1" default="CryptoFS" label="Application" max_length="200" name="application" type="choice">
+        <element choice="1" default="FuegoFS" label="Application" max_length="200" name="application" type="choice">
             <choice>
-                <element inactive_on_update="false" label="CryptoFS" sequence="0" value="CryptoFS"/>
+                <element inactive_on_update="false" label="FuegoFS" sequence="0" value="FuegoFS"/>
             </choice>
         </element>
         <element label="Content" max_length="5000000" name="content" type="string"/>

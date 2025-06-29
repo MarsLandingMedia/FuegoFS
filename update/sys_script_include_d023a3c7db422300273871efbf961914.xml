@@ -2,30 +2,30 @@
     <sys_script_include action="INSERT_OR_UPDATE">
         <access>package_private</access>
         <active>true</active>
-        <api_name>x_165838_cryptofs.CryptoMadness</api_name>
+        <api_name>x_fuegofs.FuegoFrenzy</api_name>
         <client_callable>true</client_callable>
         <description/>
-        <name>CryptoMadness</name>
-        <script><![CDATA[var CryptoMadness = Class.create();
-CryptoMadness.prototype = {
+        <name>FuegoFrenzy</name>
+        <script><![CDATA[var FuegoFrenzy = Class.create();
+FuegoFrenzy.prototype = {
 	initialize: function() {
-		//get CryptoFileService table name
-		var crypto_tbl_name;
-		var crypto_tbl = new GlideRecord('sys_db_object');
-		var crypto_tbl_qry = 'label=CryptoFileService';
-		crypto_tbl.addQuery(crypto_tbl_qry);
-		crypto_tbl.query();
-		if(crypto_tbl.next()){
-			crypto_tbl_name = crypto_tbl.name.toString();
+		//get FuegoFileService table name
+		var fuego_tbl_name;
+		var fuego_tbl = new GlideRecord('sys_db_object');
+		var fuego_tbl_qry = 'label=FuegoFileService';
+		fuego_tbl.addQuery(fuego_tbl_qry);
+		fuego_tbl.query();
+		if(fuego_tbl.next()){
+			fuego_tbl_name = fuego_tbl.name.toString();
 		}
 
-		this.crypto_tbl_name = crypto_tbl_name;
+		this.fuego_tbl_name = fuego_tbl_name;
 	},
 
 	//return the file in JSON
 	FileServe: function(path){	
 		var bdy,mimetype;	
-		var kontent = new GlideRecord(this.crypto_tbl_name);
+		var kontent = new GlideRecord(this.fuego_tbl_name);
 		var kontent_qry = 'active=true^path='+path;
 		kontent.addQuery(kontent_qry);
 		kontent.query();
@@ -38,17 +38,17 @@ CryptoMadness.prototype = {
 	},
 
 
-	type: 'CryptoMadness'
+	type: 'FuegoFrenzy'
 };]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2018-12-03 05:02:26</sys_created_on>
         <sys_id>d023a3c7db422300273871efbf961914</sys_id>
         <sys_mod_count>30</sys_mod_count>
-        <sys_name>CryptoMadness</sys_name>
-        <sys_package display_value="CryptoFS" source="x_165838_cryptofs">be94dfc7db022300273871efbf9619b6</sys_package>
+        <sys_name>FuegoFrenzy</sys_name>
+        <sys_package display_value="FuegoFS" source="x_fuegofs">be94dfc7db022300273871efbf9619b6</sys_package>
         <sys_policy>read</sys_policy>
-        <sys_scope display_value="CryptoFS">be94dfc7db022300273871efbf9619b6</sys_scope>
+        <sys_scope display_value="FuegoFS">be94dfc7db022300273871efbf9619b6</sys_scope>
         <sys_update_name>sys_script_include_d023a3c7db422300273871efbf961914</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
         <sys_updated_on>2018-12-03 07:02:20</sys_updated_on>
