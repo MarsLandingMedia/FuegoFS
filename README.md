@@ -2,6 +2,8 @@
 
 FuegoFS is a lightweight file serving application for ServiceNow. It stores all of its file content assets in a custom table and exposes a REST endpoint so the files can be retrieved by path. This allows small assets or pages to be embedded directly within your instance.
 
+Essentially, you're able to host your own web applications outside of the standard ServiceNow platform. This would be outside of Service Portal and outside of Workspace. Add a custom table CRUD API and you have a complete solution based on any modern library you choose. 
+
 ---
 
 ## How It Works
