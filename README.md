@@ -1,6 +1,6 @@
 # FuegoFS
 
-FuegoFS is a lightweight file serving application for ServiceNow. It stores static file content in a custom table and exposes a REST endpoint so the files can be retrieved by path. This allows small assets or pages to be embedded directly within your instance.
+FuegoFS is a lightweight file serving application for ServiceNow. It stores all of its file content assets in a custom table and exposes a REST endpoint so the files can be retrieved by path. This allows small assets or pages to be embedded directly within your instance.
 
 ---
 
@@ -31,8 +31,8 @@ FuegoFS is a lightweight file serving application for ServiceNow. It stores stat
 1. Import the FuegoFS scoped application into ServiceNow.
 2. Verify that the `FuegoFrenzy` script include and REST service are active.
 3. Create records in **FuegoFileService** with the desired path, MIME type, and content.
-4. Retrieve files using the REST endpoint:  
-   `GET https://your-instance.service-now.com/api/x_fuegofs/service?your-file`
+4. Retrieve files using the REST endpoint:
+   `GET https://your-instance.service-now.com/api/x_fuegofs/service?/neuronow/scripts/markdown.js`
 
 ---
 
