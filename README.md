@@ -32,7 +32,7 @@ FuegoFS is a lightweight file serving application for ServiceNow. It stores all 
 2. Verify that the `FuegoFrenzy` script include and REST service are active.
 3. Create records in **FuegoFileService** with the desired path, MIME type, and content.
 4. Retrieve files using the REST endpoint:
-   `GET https://your-instance.service-now.com/api/x_fuegofs/service?/view/hello.html`
+   `https://your-instance.service-now.com/api/x_fuegofs/service?/view/hello.html`
 
 ---
 
@@ -46,7 +46,7 @@ var file = ff.FileServe("/view/hello.html");
 gs.info(file.bdy);
 ```
 
-### To give you an idea of what to expect upon output, here's the HTML in the table record that comes with the install.
+## To give you an idea of what to expect upon output, here's the HTML in the table record that comes with the install.
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -59,6 +59,9 @@ gs.info(file.bdy);
 </body>
 </html>
 ```
+
+## Alternatively, if you simply go to the URL with that path, it will display a webpage. 
+`https://your-instance.service-now.com/api/x_fuegofs/service?/view/hello.html`
 
 ---
 
