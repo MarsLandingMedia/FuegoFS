@@ -46,6 +46,20 @@ var file = ff.FileServe("/view/hello.html");
 gs.info(file.bdy);
 ```
 
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello World Test</title>
+</head>
+<body>
+    <h1>Hello, world!</h1>
+</body>
+</html>
+```
+
 ---
 
 ## Disclaimers
