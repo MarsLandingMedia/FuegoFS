@@ -46,7 +46,7 @@ var file = ff.FileServe("/view/hello.html");
 gs.info(file.bdy);
 ```
 
-
+### To give you an idea of what to expect upon output, here's the HTML in the table record that comes with the install.
 ```html
 <!DOCTYPE html>
 <html lang="en">
