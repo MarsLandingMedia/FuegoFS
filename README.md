@@ -32,17 +32,18 @@ FuegoFS is a lightweight file serving application for ServiceNow. It stores all 
 2. Verify that the `FuegoFrenzy` script include and REST service are active.
 3. Create records in **FuegoFileService** with the desired path, MIME type, and content.
 4. Retrieve files using the REST endpoint:
-   `GET https://your-instance.service-now.com/api/x_fuegofs/service?/neuronow/scripts/markdown.js`
+   `GET https://your-instance.service-now.com/api/x_fuegofs/service?/view/hello.html`
 
 ---
 
 ## Example Script Usage
 
 ```javascript
-var ff = new FuegoFrenzy();
-var file = ff.FileServe("index.html");
+var ff = new x_fuegofs.FuegoFrenzy();
+var file = ff.FileServe("/view/hello.html");
 // file.mimetype => "text/html"
 // file.bdy      => content of the file
+gs.info(file.bdy);
 ```
 
 ---
