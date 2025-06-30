@@ -8,8 +8,8 @@ FuegoFS is a lightweight file serving application for ServiceNow. It stores all 
 
 1. **Files Stored in the FuegoFileService Table**  
    Records hold the file body, MIME type, and a unique path.
-2. **REST Call to `/api/x_fuegofs/service`**  
-   A GET request with the desired path (e.g., `?index.html`) is issued.
+2. **Scripted REST service `/api/x_fuegofs/service`**  
+   with the desired path (e.g., `?index.html`) is issued.
 3. **`FuegoFrenzy` Script Include Finds the Record**  
    The path is matched to an active record and the content is returned.
 4. **Response Includes MIME Type and Body**  
