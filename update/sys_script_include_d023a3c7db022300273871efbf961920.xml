@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_fuegofs.FuegoServe</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>SPA-aware file server with MIME detection, cache headers, and directory listing. Replaces FuegoFrenzy for production use.</description>
+        <mobile_callable>false</mobile_callable>
+        <name>FuegoServe</name>
+        <sandbox_callable>true</sandbox_callable>
+        <script><![CDATA[var FuegoServe = Class.create();
+FuegoServe.prototype = {
+    initialize: function() {
+        this.TABLE = 'x_fuegofs_fuegofileservice';
+        this.INDEX_FILES = ['index.html', 'index.htm'];
+        this.SPA_ROUTE = '/index.html';  // fallback for SPA client-side routes
+    },
+
+    // ── MIME type detection ──────────────────────────────────────────────
+    _getMime: function(path) {
+        var ext = path.substring(path.lastIndexOf('.') + 1).toLowerCase();
+        var mimes = {
+            'html': 'text/html; charset=utf-8',
+            'htm':  'text/html; charset=utf-8',
+            'js':   'text/javascript; charset=utf-8',
+            'mjs':  'text/javascript; charset=utf-8',
+            'css':  'text/css; charset=utf-8',
+            'json': 'application/json; charset=utf-8',
+            'xml':  'application/xml; charset=utf-8',
+            'svg':  'image/svg+xml',
+            'png':  'image/png',
+            'jpg':  'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'gif':  'image/gif',
+            'webp': 'image/webp',
+            'ico':  'image/x-icon',
+            'woff': 'font/woff',
+            'woff2': 'font/woff2',
+            'ttf':  'font/ttf',
+            'eot':  'application/vnd.ms-fontobject',
+            'otf':  'font/otf',
+            'txt':  'text/plain; charset=utf-8',
+            'md':   'text/markdown; charset=utf-8',
+            'pdf':  'application/pdf',
+            'wasm': 'application/wasm',
+            'map':  'application/json; charset=utf-8'
+        };
+        return mimes[ext] || 'application/octet-stream';
+    },
+
+    // ── Cache headers ────────────────────────────────────────────────────
+    _getCacheControl: function(path) {
+        // Hashed assets (e.g., main.a1b2c3d4.js) get long cache
+        var filename = path.substring(path.lastIndexOf('/') + 1);
+        var ext = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+
+        if (filename === 'index.html' || filename === 'index.htm') {
+            return 'no-cache, no-store, must-revalidate';
+        }
+
+        // Files with hash patterns (8+ hex chars before extension) get immutable
+        var hashMatch = filename.match(/\.[a-f0-9]{8,}\./i);
+        if (hashMatch && ext !== 'html') {
+            return 'public, max-age=31536000, immutable';
+        }
+
+        // Default: short cache
+        return 'public, max-age=300';
+    },
+
+    // ── Normalize path ───────────────────────────────────────────────────
+    _normalizePath: function(path) {
+        if (!path) path = '/';
+        // Remove leading query params
+        path = path.split('?')[0];
+        // Ensure leading slash
+        if (path.charAt(0) !== '/') path = '/' + path;
+        // Remove trailing slash (unless root)
+        if (path.length > 1 && path.charAt(path.length - 1) === '/') {
+            path = path.substring(0, path.length - 1);
+        }
+        return path;
+    },
+
+    // ── Serve a file by path ─────────────────────────────────────────────
+    serve: function(rawPath) {
+        var path = this._normalizePath(rawPath);
+        var result = { found: false, content: '', mimeType: '', cacheControl: '' };
+
+        // Try exact path match
+        var gr = new GlideRecord(this.TABLE);
+        gr.addQuery('active', true);
+        gr.addQuery('path', path);
+        gr.setLimit(1);
+        gr.query();
+
+        if (gr.next()) {
+            result.found = true;
+            result.content = gr.getValue('content') || '';
+            result.mimeType = gr.getValue('mime_type') || this._getMime(path);
+            result.cacheControl = this._getCacheControl(path);
+            return result;
+        }
+
+        // Try index file for directory paths (e.g., /view/ -> /view/index.html)
+        for (var i = 0; i < this.INDEX_FILES.length; i++) {
+            var indexPath = path + '/' + this.INDEX_FILES[i];
+            gr = new GlideRecord(this.TABLE);
+            gr.addQuery('active', true);
+            gr.addQuery('path', indexPath);
+            gr.setLimit(1);
+            gr.query();
+            if (gr.next()) {
+                result.found = true;
+                result.content = gr.getValue('content') || '';
+                result.mimeType = this._getMime(indexPath);
+                result.cacheControl = this._getCacheControl(indexPath);
+                return result;
+            }
+        }
+
+        // SPA fallback: return index.html for any unmatched path
+        // (enables client-side routing)
+        gr = new GlideRecord(this.TABLE);
+        gr.addQuery('active', true);
+        gr.addQuery('path', this.SPA_ROUTE);
+        gr.setLimit(1);
+        gr.query();
+        if (gr.next()) {
+            result.found = true;
+            result.content = gr.getValue('content') || '';
+            result.mimeType = 'text/html; charset=utf-8';
+            result.cacheControl = 'no-cache, no-store, must-revalidate';
+            result.spaFallback = true;
+            return result;
+        }
+
+        return result;
+    },
+
+    // ── List files under a path prefix ───────────────────────────────────
+    listDirectory: function(prefix) {
+        var path = this._normalizePath(prefix);
+        var files = [];
+
+        var gr = new GlideRecord(this.TABLE);
+        gr.addQuery('active', true);
+        if (path === '/') {
+            // Root: get all
+            gr.orderBy('path');
+        } else {
+            // Prefix match
+            gr.addQuery('path', 'STARTSWITH', path + '/');
+            gr.orderBy('path');
+        }
+        gr.query();
+
+        while (gr.next()) {
+            var filePath = gr.getValue('path') || '';
+            var fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
+            files.push({
+                path: filePath,
+                name: fileName,
+                mimeType: gr.getValue('mime_type') || this._getMime(filePath),
+                size: (gr.getValue('content') || '').length
+            });
+        }
+
+        return { path: path, count: files.length, files: files };
+    },
+
+    // ── Store a file (CRUD: create/update) ───────────────────────────────
+    storeFile: function(path, content, mimeType) {
+        path = this._normalizePath(path);
+        if (!mimeType) mimeType = this._getMime(path);
+
+        var gr = new GlideRecord(this.TABLE);
+        gr.addQuery('path', path);
+        gr.query();
+
+        if (gr.next()) {
+            // Update existing
+            gr.setValue('content', content);
+            gr.setValue('mime_type', mimeType);
+            gr.setValue('active', true);
+            gr.update();
+            return { action: 'updated', path: path, mimeType: mimeType };
+        }
+
+        // Create new
+        gr.initialize();
+        gr.setValue('path', path);
+        gr.setValue('content', content);
+        gr.setValue('mime_type', mimeType);
+        gr.setValue('active', true);
+        gr.setValue('application', 'FuegoFS');
+        gr.insert();
+        return { action: 'created', path: path, mimeType: mimeType };
+    },
+
+    // ── Delete a file ────────────────────────────────────────────────────
+    deleteFile: function(path) {
+        path = this._normalizePath(path);
+        var deleted = 0;
+
+        var gr = new GlideRecord(this.TABLE);
+        gr.addQuery('path', path);
+        gr.query();
+        while (gr.next()) {
+            gr.deleteRecord();
+            deleted++;
+        }
+
+        return { action: 'deleted', path: path, count: deleted };
+    },
+
+    // ── Bulk upload (array of {path, content, mimeType}) ─────────────────
+    bulkUpload: function(files) {
+        var results = [];
+        for (var i = 0; i < files.length; i++) {
+            try {
+                var r = this.storeFile(files[i].path, files[i].content, files[i].mimeType);
+                results.push(r);
+            } catch (e) {
+                results.push({ action: 'error', path: files[i].path, error: e.message });
+            }
+        }
+        return { total: files.length, results: results };
+    },
+
+    // ── Health check ─────────────────────────────────────────────────────
+    health: function() {
+        var gr = new GlideRecord(this.TABLE);
+        gr.addQuery('active', true);
+        gr.query();
+        var count = gr.getRowCount();
+
+        var indexExists = false;
+        gr = new GlideRecord(this.TABLE);
+        gr.addQuery('active', true);
+        gr.addQuery('path', this.SPA_ROUTE);
+        gr.setLimit(1);
+        gr.query();
+        if (gr.next()) indexExists = true;
+
+        return {
+            status: 'ok',
+            table: this.TABLE,
+            activeFiles: count,
+            indexServed: indexExists,
+            timestamp: new GlideDateTime().getDisplayValue()
+        };
+    },
+
+    type: 'FuegoServe'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-07-17 15:00:00</sys_created_on>
+        <sys_id>d023a3c7db022300273871efbf961920</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>FuegoServe</sys_name>
+        <sys_package display_value="FuegoFS" source="x_fuegofs">be94dfc7db022300273871efbf9619b6</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="FuegoFS">be94dfc7db022300273871efbf9619b6</sys_scope>
+        <sys_update_name>sys_script_include_d023a3c7db022300273871efbf961920</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-07-17 15:00:00</sys_updated_on>
+    </sys_script_include>
+</record_update>

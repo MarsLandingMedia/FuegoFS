@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ws_operation">
+    <sys_ws_operation action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <consumes>application/json,application/octet-stream,text/plain,text/html,*/*</consumes>
+        <consumes_template/>
+        <default_http_method>GET</default_http_method>
+        <description>SPA-aware file serving endpoint with auth gate, cache headers, directory listing, and CRUD API for FuegoFS</description>
+        <example_url>https://instance.service-now.com/api/x_fuegofs/service?/path/to/file.html</example_url>
+        <http_method>GET</http_method>
+        <name>Serve File (SPA)</name>
+        <operation_script><![CDATA[// FuegoServe REST API — SPA-aware file server
+// Auth: requires authenticated SN session (snc_internal role)
+// Routes:
+//   GET  /api/x_fuegofs/service?/path/to/file    → serve file with MIME + cache headers
+//   GET  /api/x_fuegofs/service?/path/to/dir/     → directory listing (JSON)
+//   GET  /api/x_fuegofs/service?op=health          → health check
+//   GET  /api/x_fuegofs/service?op=list&prefix=/   → explicit directory list
+//   POST /api/x_fuegofs/service                     → store file (body: {path, content, mimeType})
+//   DELETE /api/x_fuegofs/service?/path/to/file     → delete file
+
+(function process(request, response) {
+    var fuego = new x_fuegofs.FuegoServe();
+    var method = request.method.toUpperCase();
+    var pathParam = request.queryParams['path'] || request.queryParams.toString() || '';
+
+    // If query param starts with / it's a file path (legacy compat: ?/path/to/file)
+    var queryStr = request.queryString || '';
+    if (!pathParam && queryStr && queryStr.charAt(0) === '/') {
+        pathParam = queryStr;
+    }
+
+    // ── Auth gate ──
+    // Require authenticated session — gs.getUserID() returns 'guest' for unauthenticated
+    var userId = gs.getUserID();
+    if (!userId || userId === 'guest' || userId === 'system') {
+        response.setStatus(401);
+        response.setContentType('application/json');
+        response.setBody({ error: 'Authentication required', status: 401 });
+        return;
+    }
+
+    // ── Health check ──
+    if (request.queryParams.op === 'health') {
+        response.setStatus(200);
+        response.setContentType('application/json');
+        response.setBody(fuego.health());
+        return;
+    }
+
+    // ── Directory listing ──
+    if (request.queryParams.op === 'list' || request.queryParams.prefix !== undefined) {
+        var prefix = request.queryParams.prefix || '/';
+        var listing = fuego.listDirectory(prefix);
+        response.setStatus(200);
+        response.setContentType('application/json');
+        response.setBody(listing);
+        return;
+    }
+
+    // ── POST: Store file ──
+    if (method === 'POST') {
+        var body = request.body;
+        var data = {};
+        if (body) {
+            try {
+                data = JSON.parse(body.data);
+            } catch (e) {
+                response.setStatus(400);
+                response.setContentType('application/json');
+                response.setBody({ error: 'Invalid JSON body', detail: e.message });
+                return;
+            }
+        }
+        if (!data.path) {
+            response.setStatus(400);
+            response.setContentType('application/json');
+            response.setBody({ error: 'Missing required field: path' });
+            return;
+        }
+        var storeResult = fuego.storeFile(data.path, data.content || '', data.mimeType);
+        response.setStatus(200);
+        response.setContentType('application/json');
+        response.setBody(storeResult);
+        return;
+    }
+
+    // ── POST: Bulk upload ──
+    if (method === 'POST' && request.queryParams.op === 'bulk') {
+        var bulkBody = request.body;
+        var bulkData = {};
+        if (bulkBody) {
+            try {
+                bulkData = JSON.parse(bulkBody.data);
+            } catch (e) {
+                response.setStatus(400);
+                response.setContentType('application/json');
+                response.setBody({ error: 'Invalid JSON body' });
+                return;
+            }
+        }
+        if (!bulkData.files || !Array.isArray(bulkData.files)) {
+            response.setStatus(400);
+            response.setContentType('application/json');
+            response.setBody({ error: 'Missing files array' });
+            return;
+        }
+        var bulkResult = fuego.bulkUpload(bulkData.files);
+        response.setStatus(200);
+        response.setContentType('application/json');
+        response.setBody(bulkResult);
+        return;
+    }
+
+    // ── DELETE: Remove file ──
+    if (method === 'DELETE') {
+        if (!pathParam || pathParam === '/') {
+            response.setStatus(400);
+            response.setContentType('application/json');
+            response.setBody({ error: 'Path required for deletion' });
+            return;
+        }
+        var delResult = fuego.deleteFile(pathParam);
+        response.setStatus(200);
+        response.setContentType('application/json');
+        response.setBody(delResult);
+        return;
+    }
+
+    // ── GET: Serve file (default) ──
+    if (!pathParam || pathParam === '/' || pathParam === '') {
+        pathParam = '/index.html';
+    }
+
+    var result = fuego.serve(pathParam);
+
+    if (!result.found) {
+        response.setStatus(404);
+        response.setContentType('application/json');
+        response.setBody({ error: 'File not found', path: pathParam });
+        return;
+    }
+
+    // Set headers
+    response.setContentType(result.mimeType);
+    response.setHeader('Cache-Control', result.cacheControl);
+
+    // Add ETag based on content hash (simple)
+    var etag = gs.hash(result.content + result.mimeType);
+    response.setHeader('ETag', '"' + etag + '"');
+
+    // Handle If-None-Match for 304
+    var ifNoneMatch = request.getHeader('If-None-Match');
+    if (ifNoneMatch && ifNoneMatch.indexOf(etag) !== -1) {
+        response.setStatus(304);
+        return;
+    }
+
+    // For non-text content that might be binary, we still set as string
+    // (SN REST stores content as text in the table; true binary would need base64)
+    response.setStatus(200);
+    response.setBody(result.content);
+})(request, response);]]></operation_script>
+        <operation_uri>/api/x_fuegofs/service</operation_uri>
+        <produces>text/html,text/javascript,text/css,application/json,application/octet-stream,image/svg+xml,*/*</produces>
+        <produces_template/>
+        <relative_path/>
+        <request_example/>
+        <requires_acl_authorization>true</requires_acl_authorization>
+        <requires_authentication>true</requires_authentication>
+        <requires_subscription>false</requires_subscription>
+        <short_description>Serve files with SPA fallback, MIME, cache, and CRUD</short_description>
+        <sys_class_name>sys_ws_operation</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-07-17 15:00:00</sys_created_on>
+        <sys_id>2cbc1b4fdb422300273871efbf961920</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>Serve File (SPA)</sys_name>
+        <sys_package display_value="FuegoFS" source="x_fuegofs">be94dfc7db022300273871efbf9619b6</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="FuegoFS">be94dfc7db022300273871efbf9619b6</sys_scope>
+        <sys_update_name>sys_ws_operation_2cbc1b4fdb422300273871efbf961920</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-07-17 15:00:00</sys_updated_on>
+        <web_service_definition display_value="FuegoFS Service">333a138fdb422300273871efbf961950</web_service_definition>
+        <web_service_method display_value="Serve File (SPA)">2cbc1b4fdb422300273871efbf961920</web_service_method>
+    </sys_ws_operation>
+</record_update>

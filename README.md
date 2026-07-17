@@ -1,81 +1,143 @@
 # FuegoFS
 
-FuegoFS is a lightweight file serving application for ServiceNow. It stores all of its file content assets in a custom table and exposes a REST endpoint so the files can be retrieved by path. This allows small assets or pages to be embedded directly within your instance.
+FuegoFS is a lightweight file serving application for ServiceNow. It stores file content assets in a custom table and exposes a REST endpoint so files can be retrieved by path. Files are served with proper MIME types, cache headers, and SPA routing fallback.
 
-Essentially, you're able to host your own web applications outside of the standard ServiceNow platform. This would be outside of Service Portal and outside of Workspace. Add a custom table CRUD API and you have a complete solution based on any modern library you choose. 
+Host web applications, static sites, and assets directly from your ServiceNow instance — outside of Service Portal and outside of Workspace.
+
+---
+
+## What's New (v2.0)
+
+- **SPA routing fallback** — unmatched paths return `index.html` for client-side routing
+- **Proper MIME types** — 20+ extensions mapped, correct `Content-Type` headers
+- **Cache headers** — hashed assets get `immutable`, `index.html` gets `no-cache`
+- **ETag support** — `If-None-Match` returns `304 Not Modified`
+- **Auth gate** — requires authenticated SN session (no anonymous access)
+- **Directory listing** — `?op=list&prefix=/path` returns JSON file list
+- **CRUD API** — POST to create/update, DELETE to remove, bulk upload supported
+- **Health check** — `?op=health` for monitoring
 
 ---
 
 ## How It Works
 
-1. **Files Stored in the FuegoFileService Table**  
-   Records hold the file body, MIME type, and a unique path.
-2. **Scripted REST service `/api/x_fuegofs/service`**  
-   with the desired path (e.g., `?index.html`) is issued.
-3. You are able to leverage a folder-like naming structure to organize your records and define their use.   
-4. **`FuegoFrenzy` Script Include Finds the Record**  
-   The path is matched to an active record and the content is returned.
-5. **Response Includes MIME Type and Body**  
-   The REST API sets the response content type and streams the file back to the caller.
+1. **Files stored in the FuegoFileService table** — records hold file body, MIME type, and a unique path
+2. **REST endpoint `/api/x_fuegofs/service`** — serves files by path with proper headers
+3. **SPA fallback** — paths that don't match a record return `index.html` (enables React Router, etc.)
+4. **FuegoServe Script Include** — handles serving, MIME detection, caching, and CRUD operations
 
 ---
 
-## Features
+## API Reference
 
-- Simple REST interface for serving stored files
-- Supports common MIME types such as HTML, CSS, JavaScript, images, and PDF
-- Path-based lookup so multiple files can be managed in one table
-- Script Include `FuegoFrenzy` can be called from other scripts
+### Serve a File
+```
+GET /api/x_fuegofs/service?/path/to/file.html
+```
+Returns file content with correct `Content-Type` and `Cache-Control` headers.
+
+### SPA Routing
+```
+GET /api/x_fuegofs/service?/any/client/route
+```
+If the path doesn't match a file, returns `index.html` (200, not 404). This enables client-side routing for SPAs.
+
+### Directory Listing
+```
+GET /api/x_fuegofs/service?op=list&prefix=/view
+```
+Returns JSON array of files under the given prefix.
+
+### Store a File
+```
+POST /api/x_fuegofs/service
+Content-Type: application/json
+
+{
+  "path": "/js/main.js",
+  "content": "console.log('hello');",
+  "mimeType": "text/javascript"
+}
+```
+
+### Bulk Upload
+```
+POST /api/x_fuegofs/service?op=bulk
+Content-Type: application/json
+
+{
+  "files": [
+    { "path": "/index.html", "content": "..." },
+    { "path": "/css/style.css", "content": "..." }
+  ]
+}
+```
+
+### Delete a File
+```
+DELETE /api/x_fuegofs/service?/path/to/file
+```
+
+### Health Check
+```
+GET /api/x_fuegofs/service?op=health
+```
+
+---
+
+## MIME Types Supported
+
+HTML, JS, CSS, JSON, XML, SVG, PNG, JPG, GIF, WebP, ICO, WOFF, WOFF2, TTF, EOT, OTF, TXT, MD, PDF, WASM, source maps.
+
+## Cache Strategy
+
+| File Type | Cache-Control |
+|---|---|
+| `index.html` | `no-cache, no-store, must-revalidate` |
+| Hashed assets (`main.a1b2c3d4.js`) | `public, max-age=31536000, immutable` |
+| Other files | `public, max-age=300` |
 
 ---
 
 ## Installation
 
 1. Import the FuegoFS scoped application into ServiceNow.
-2. Verify that the `FuegoFrenzy` script include and REST service are active.
-3. Create records in **FuegoFileService** with the desired path, MIME type, and content.
-4. Retrieve files using the REST endpoint:
-   `https://your-instance.service-now.com/api/x_fuegofs/service?/view/hello.html`
+2. Verify `FuegoServe` Script Include and the REST service are active.
+3. Upload files via POST API or create records manually in FuegoFileService.
+4. Retrieve files: `https://your-instance.service-now.com/api/x_fuegofs/service?/index.html`
 
 ---
 
-## Example Script Usage
+## Example: Hosting a React App
 
-```javascript
-var ff = new x_fuegofs.FuegoFrenzy();
-var file = ff.FileServe("/view/hello.html");
-// file.mimetype => "text/html"
-// file.bdy      => content of the file
-gs.info(file.bdy);
+```bash
+# Build your React app
+npm run build
+
+# Upload the build to FuegoFS
+for file in dist/**/*; do
+  path="/${file#dist/}"
+  content=$(cat "$file")
+  mime=$(file --mime-type -b "$file")
+  curl -X POST "https://instance.service-now.com/api/x_fuegofs/service" \
+    -H "Content-Type: application/json" \
+    -u "admin:password" \
+    -d "{\"path\": \"$path\", \"content\": \"$content\", \"mimeType\": \"$mime\"}"
+done
+
+# Access your app
+open "https://instance.service-now.com/api/x_fuegofs/service?/index.html"
 ```
-
-## To give you an idea of what to expect upon output, here's the HTML in the table record that comes with the install.
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Hello World Test</title>
-</head>
-<body>
-    <h1>Hello, world!</h1>
-</body>
-</html>
-```
-
-## Alternatively, if you simply go to the URL with that path, it will display a webpage. 
-`https://your-instance.service-now.com/api/x_fuegofs/service?/view/hello.html`
 
 ---
 
 ## Disclaimers
 
-**Legal and Use Notice**  
-This project is licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/gpl-3.0.html) and is a product of **Mars Landing Media LLC**. It is provided solely for demonstration and educational purposes. No warranties, maintenance, or official support of any kind are provided. Use at your own risk.
+**Legal and Use Notice**
+This project is licensed under the GNU Affero General Public License and is a product of Mars Landing Media LLC. Provided for demonstration and educational purposes. No warranties or support provided. Use at your own risk.
 
-**ServiceNow® Notice**  
-ServiceNow is a registered trademark of ServiceNow, Inc. This project is not affiliated with, endorsed by, or sponsored by ServiceNow. Ensure usage complies with ServiceNow's Terms of Service.
+**ServiceNow Notice**
+ServiceNow is a registered trademark of ServiceNow, Inc. This project is not affiliated with or endorsed by ServiceNow.
 
-
-**GlideRecordSecure Notice**  
+**GlideRecordSecure Notice**
 This project does not enforce GlideRecordSecure and assumes a trusted development environment.
